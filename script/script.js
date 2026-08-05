@@ -224,6 +224,7 @@ function createPlayer(name, symbol) {
 // TODO: Create a GameFlow Controller Object
 
 const GameController = (() => {
+
     // create a game board object
     let board = gameBoard();
 
@@ -241,7 +242,11 @@ const GameController = (() => {
 
     // read the state of the game board after every turn
     const readBoardState = () => board.getBoard();
-// check for winner or tie
+    
+    // check for winner or tie
+    const checkWinner = () => {
+        
+    }
 // switch turns between players
 })();
 
