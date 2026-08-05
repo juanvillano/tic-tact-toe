@@ -172,7 +172,6 @@ const gameBoard = (()=> {
     // get the board array
     const getBoard = () => gameBoardArray;
 
-
     // mark a cell with player's symbol (X or O)
     const markCell = (row, col, symbol) => {
         const cells = gameBoardArray.filter((row) => row[col] === '');
@@ -199,7 +198,9 @@ console.log(gameBoard.getBoard());
 // TODO: Create a Player factory function 
 // create a player with a name, symbol (X or O), and score
 
-function createPlayer(name, symbol, score = 0) {
+function createPlayer(name, symbol) {
+
+    let score = 0;
 
     const getName = () => name;
     const setName = (newName) => { name = newName };
@@ -221,9 +222,28 @@ function createPlayer(name, symbol, score = 0) {
 }
 
 // TODO: Create a GameFlow Controller Object
-// read the state of the game board after every turn
+
+const GameController = (() => {
+    // create a game board object
+    let board = gameBoard();
+
+    // create players
+    const PlayerOne = createPlayer('Player One', 'X');
+    const playerTwo = createPlayer('Player Two', 'O');
+
+    // active player
+    let activePlayer = PlayerOne;
+
+    // Switch turns
+    const switchTurn = () => {
+        activePlayer = activePlayer === PlayerOne ? playerTwo : PlayerOne;
+    }
+
+    // read the state of the game board after every turn
+    const readBoardState = () => board.getBoard();
 // check for winner or tie
 // switch turns between players
+})();
 
 
 // TODO: Create a DisplayController object 
