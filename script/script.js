@@ -156,12 +156,12 @@
 // manages state of each cell
 // returns the state of the board, which cells are marked and which are empty
 
-const gameBoard = (()=> {
+function gameBoard() {
     const rows = 3;
     const cols = 3;
     let gameBoardArray = [];
 
-    // creating the board array with empty strings
+    // Create the board array with empty strings
     for (let i = 0; i < rows; i++) {
         gameBoardArray[i] = [];
         for (let j = 0; j < cols; j++) {
@@ -174,13 +174,15 @@ const gameBoard = (()=> {
 
     // mark a cell with player's symbol (X or O)
     const markCell = (row, col, symbol) => {
+
         const cells = gameBoardArray.filter((row) => row[col] === '');
 
         if (cells.length === 0) {
             return `Cell at row ${row}, col ${col} is already occupied.`;
         } else {
-            gameBoardArray[row][col] = symbol;
+            return gameBoardArray[row][col] = symbol;
         }
+
     }
 
     return {
@@ -188,12 +190,12 @@ const gameBoard = (()=> {
         markCell,
     };
 
-})();
+}
 
-console.log(gameBoard.getBoard());
-console.log(gameBoard.markCell(0, 1, 'X'));
-console.log(gameBoard.markCell(1, 1, 'O'));
-console.log(gameBoard.getBoard());
+// console.log(gameBoard.getBoard());
+// console.log(gameBoard.markCell(0, 1, 'X'));
+// console.log(gameBoard.markCell(1, 1, 'O'));
+// console.log(gameBoard.getBoard());
 
 // TODO: Create a Player factory function 
 // create a player with a name, symbol (X or O), and score
@@ -223,21 +225,26 @@ function createPlayer(name, symbol) {
 
 // TODO: Create a GameFlow Controller Object
 
-const GameController = (() => {
+const gameController = (() => {
 
     // create a game board object
-    let board = gameBoard();
+    const board = gameBoard();
 
     // create players
-    const PlayerOne = createPlayer('Player One', 'X');
+    const playerOne = createPlayer('Player One', 'X');
     const playerTwo = createPlayer('Player Two', 'O');
 
     // active player
-    let activePlayer = PlayerOne;
+    let activePlayer = playerOne;
+
+    // Get player move
+    const getMove = function(row, col) {
+        return board.markCell(row, col, activePlayer.getSymbol());
+    }
 
     // Switch turns
     const switchTurn = () => {
-        activePlayer = activePlayer === PlayerOne ? playerTwo : PlayerOne;
+        activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
     }
 
     // read the state of the game board after every turn
@@ -245,10 +252,29 @@ const GameController = (() => {
     
     // check for winner or tie
     const checkWinner = () => {
-        
+        let currentBoard = readBoardState();
+        for (let i = 0; i < currentBoard.length; i++) {
+            for (let j = 0; j < currentBoard[i].length; j++) {
+                
+            }
+        }
+        return currentBoard.length;
     }
-// switch turns between players
+
+    return {
+        switchTurn,
+        readBoardState,
+        checkWinner,
+        getMove,
+        }
 })();
+
+console.log(gameController.readBoardState());
+console.log(gameController.getMove(0, 1));
+console.log(gameController.switchTurn());
+console.log(gameController.getMove(1, 2));
+console.log(gameController.readBoardState());
+console.log(gameController.checkWinner());
 
 
 // TODO: Create a DisplayController object 
