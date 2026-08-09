@@ -176,12 +176,7 @@ function gameBoard() {
     const markCell = (row, col, symbol) => {
 
         const cells = gameBoardArray.filter((row) => row[col] === '');
-
-        if (cells.length === 0) {
-            return `Cell at row ${row}, col ${col} is already occupied.`;
-        } else {
-            return gameBoardArray[row][col] = symbol;
-        }
+        if (cells.length !== 0) gameBoardArray[row][col] = symbol;
 
     }
 
@@ -192,10 +187,6 @@ function gameBoard() {
 
 }
 
-// console.log(gameBoard.getBoard());
-// console.log(gameBoard.markCell(0, 1, 'X'));
-// console.log(gameBoard.markCell(1, 1, 'O'));
-// console.log(gameBoard.getBoard());
 
 // TODO: Create a Player factory function 
 // create a player with a name, symbol (X or O), and score
@@ -230,6 +221,18 @@ const gameController = (() => {
     // create a game board object
     const board = gameBoard();
 
+    // combinations
+    const wins = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+    ];
+
     // create players
     const playerOne = createPlayer('Player One', 'X');
     const playerTwo = createPlayer('Player Two', 'O');
@@ -237,9 +240,12 @@ const gameController = (() => {
     // active player
     let activePlayer = playerOne;
 
+    // get current player
+    const getActivePlayer = () => activePlayer.getSymbol();
+
     // Get player move
     const getMove = function(row, col) {
-        return board.markCell(row, col, activePlayer.getSymbol());
+        board.markCell(row, col, getActivePlayer());
     }
 
     // Switch turns
@@ -252,13 +258,34 @@ const gameController = (() => {
     
     // check for winner or tie
     const checkWinner = () => {
-        let currentBoard = readBoardState();
-        for (let i = 0; i < currentBoard.length; i++) {
-            for (let j = 0; j < currentBoard[i].length; j++) {
-                
+        let winner;
+
+        let currentBoard = readBoardState().flat();
+
+        // Record the position of each player on the board
+        const playersPositions = currentBoard.reduce((accumulator, currentVal, index) => {
+            if (!accumulator[currentVal]) accumulator[currentVal] = [];
+            if(currentVal === 'X' || currentVal === 'O') {
+                accumulator[currentVal].push(index);
             }
+            return accumulator;
+        }, {});
+
+        if(playersPositions['X'] && playersPositions['X'].length >= 3) {
+            if (wins.some(subArray => subArray.length === playersPositions['X'].length && subArray.every((value, index) => value === playersPositions['X'][index]))) {
+                winner = playerOne.getSymbol();
+            }
+        } else if(playersPositions['O'] && playersPositions['O'].length >= 3) {
+            if(wins.some(subArray => subArray.length === playersPositions['O'].length && subArray.every((value, index) => value === playersPositions['O'][index]))) {
+                winner = playerTwo.getSymbol();
+            } 
+        } else {
+            winner = '';
         }
-        return currentBoard.length;
+
+        console.log(`Winner is ${winner}!`)
+
+        return winner;
     }
 
     return {
@@ -266,14 +293,17 @@ const gameController = (() => {
         readBoardState,
         checkWinner,
         getMove,
+        getActivePlayer,
         }
 })();
 
-console.log(gameController.readBoardState());
-console.log(gameController.getMove(0, 1));
-console.log(gameController.switchTurn());
-console.log(gameController.getMove(1, 2));
-console.log(gameController.readBoardState());
+
+console.log('the current player is:', gameController.getActivePlayer());
+gameController.switchTurn();
+gameController.getMove(0, 0);
+gameController.getMove(1, 1);
+gameController.getMove(2, 2);
+console.log('The current matrix looks like this: ', gameController.readBoardState());
 console.log(gameController.checkWinner());
 
 
