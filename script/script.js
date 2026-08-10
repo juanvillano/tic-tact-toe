@@ -273,19 +273,37 @@ const gameController = (() => {
 
         if(playersPositions['X'] && playersPositions['X'].length >= 3) {
             if (wins.some(subArray => subArray.length === playersPositions['X'].length && subArray.every((value, index) => value === playersPositions['X'][index]))) {
-                winner = playerOne.getSymbol();
+                winner = 1;
+                playerOne.increaseScore();
             }
         } else if(playersPositions['O'] && playersPositions['O'].length >= 3) {
             if(wins.some(subArray => subArray.length === playersPositions['O'].length && subArray.every((value, index) => value === playersPositions['O'][index]))) {
-                winner = playerTwo.getSymbol();
+                winner = 2;
+                playerTwo.increaseScore();
             } 
         } else {
-            winner = '';
+            // check if empty cells 
+            let isDraw = currentBoard.every(item => item != "");
+            // if board is full then is a draw
+            if (isDraw) {
+                winner = 0;
+            } else {
+                winner = 3;
+            }
         }
 
         console.log(`Winner is ${winner}!`)
 
+        // 1 = X
+        // 2 = O
+        // 0 = draw
+        // 3 = game continues
         return winner;
+    }
+
+
+    const playRound = () => {
+        
     }
 
     return {
