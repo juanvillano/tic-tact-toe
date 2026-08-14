@@ -174,10 +174,11 @@ function gameBoard() {
 
     // mark a cell with player's symbol (X or O)
     const markCell = (row, col, symbol) => {
-
-        const cells = gameBoardArray.filter((row) => row[col] === '');
-        if (cells.length !== 0) gameBoardArray[row][col] = symbol;
-
+        if (gameBoardArray[row][col] === '') {
+            gameBoardArray[row][col] = symbol;
+            return true;
+        }
+        return false;
     }
 
     return {
@@ -245,7 +246,7 @@ const gameController = (() => {
 
     // Get player move
     const getMove = function(row, col) {
-        board.markCell(row, col, getActivePlayer());
+        return board.markCell(row, col, getActivePlayer());
     }
 
     // Switch turns
@@ -289,6 +290,7 @@ const gameController = (() => {
                 winner = 0;
             } else {
                 winner = 3;
+                switchTurn();
             }
         }
 
@@ -301,17 +303,19 @@ const gameController = (() => {
         return winner;
     }
 
+    // play a round
+    const playRound = (row, col) => {
+       const isMoveValid = getMove(row, col);
 
-    const playRound = () => {
-        
+       if (!isMoveValid) return;
+       
+       return checkWinner();
     }
 
     return {
-        switchTurn,
-        readBoardState,
-        checkWinner,
-        getMove,
+        playRound,
         getActivePlayer,
+        readBoardState,
         }
 })();
 
