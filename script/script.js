@@ -170,7 +170,7 @@ function gameBoard() {
     }
     
     // get the board array
-    const getBoard = () => gameBoardArray;
+    const getBoard = () => gameBoardArray.flat();
 
     // mark a cell with player's symbol (X or O)
     const markCell = (row, col, symbol) => {
@@ -242,16 +242,18 @@ const gameController = (() => {
     let activePlayer = playerOne;
 
     // get current player
-    const getActivePlayer = () => activePlayer.getSymbol();
-
-    // Get player move
-    const getMove = function(row, col) {
-        return board.markCell(row, col, getActivePlayer());
-    }
+    const getActivePlayer = () => activePlayer.getName();
+    //const getActivePlayerName = () => activePlayer.getName();
+    //const changePlayerName = (name) => activePlayer.setName(name);
 
     // Switch turns
     const switchTurn = () => {
-        activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
+        return activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
+    }
+
+        // Get player move
+    const getMove = function(row, col) {
+        return board.markCell(row, col, getActivePlayer());
     }
 
     // read the state of the game board after every turn
@@ -315,26 +317,61 @@ const gameController = (() => {
     return {
         playRound,
         getActivePlayer,
+        playerOne,
+        playerTwo,
         readBoardState,
+        getBoard: board.getBoard,
         }
 })();
 
 
-console.log('the current player is:', gameController.getActivePlayer());
-gameController.switchTurn();
-gameController.getMove(0, 0);
-gameController.getMove(1, 1);
-gameController.getMove(2, 2);
-console.log('The current matrix looks like this: ', gameController.readBoardState());
-console.log(gameController.checkWinner());
+// console.log('the current player is:', gameController.getActivePlayer());
+// gameController.switchTurn();
+// gameController.getMove(0, 0);
+// gameController.getMove(1, 1);
+// gameController.getMove(2, 2);
+// console.log('The current matrix looks like this: ', gameController.readBoardState());
+// console.log(gameController.checkWinner());
 
 
 // TODO: Create a DisplayController object 
 // control the display of the game and DOM logic to render the content of the game board and player information
+function displayController() {
+    const game = gameController;
+    const boardContainer = document.querySelector('.board');
+    const turnShow = document.querySelector('.turn');
 
+    // TODO: Create an UpdateScreen method
+    const updateScreen = () => {
+        // Clear the current board
+        boardContainer.textContent = "";
+        // Get the up-to-date board
+        const board = game.getBoard();
+        // Get the active player's name
+        game.playerOne.setName('John')
+        const activePlayerName = game.playerOne.getName();
+        // Render player's turn in a div
+        turnShow.textContent = `It's ${activePlayerName}'s turn.`
+        // Render each grid square on the DOM
+        board.forEach((cell, index) => {
+            const cellButton = document.createElement('button');
+            cellButton.classList.add('cell');
+            cellButton.dataset.column = index;
+            cellButton.textContent = cell;
 
-// TODO: Create functions that allow players to make moves and update the game board
-// TODO: Create a function to not allow player to make a move in a cell that is already occupied
-// TODO: Create a function to clean the interface and allow players to put in their names
-// TODO: Include a button to start and restart the game
-// TODO: Create a display element to show results upon game completion
+            boardContainer.appendChild(cellButton);
+        });
+
+    }
+       
+
+    // TODO: Create a clickHandlerBoard method
+        // verifies that a valid cell is clicked 
+        // gets the column data attribute value
+        // pass data to playround
+        // run updated screen method to refresh DOM
+
+    updateScreen()
+}
+
+displayController();
