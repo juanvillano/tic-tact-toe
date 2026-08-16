@@ -162,15 +162,17 @@ function gameBoard() {
     let gameBoardArray = [];
 
     // Create the board array with empty strings
-    for (let i = 0; i < rows; i++) {
-        gameBoardArray[i] = [];
-        for (let j = 0; j < cols; j++) {
-            gameBoardArray[i][j] = '';
+    const cleanBoard = () => {
+        for (let i = 0; i < rows; i++) {
+            gameBoardArray[i] = [];
+            for (let j = 0; j < cols; j++) {
+                gameBoardArray[i][j] = '';
+            }
         }
     }
     
     // get the board array
-    const getBoard = () => gameBoardArray.flat();
+    const getBoard = () => gameBoardArray;
 
     // mark a cell with player's symbol (X or O)
     const markCell = (row, col, symbol) => {
@@ -181,9 +183,12 @@ function gameBoard() {
         return false;
     }
 
+    cleanBoard();
+
     return {
         getBoard,
         markCell,
+        cleanBoard,
     };
 
 }
@@ -234,6 +239,16 @@ const gameController = (() => {
         [2, 4, 6],
     ];
 
+    // rounds
+    let rounds = 0;
+    const getRounds = () => rounds;
+    const increaseRounds = () => { rounds++ };
+
+    // draws
+    let draws = 0;
+    const getDraws = () => draws;
+    const increaseDraws = () => { draws++ };
+
     // create players
     const playerOne = createPlayer('Player One', 'X');
     const playerTwo = createPlayer('Player Two', 'O');
@@ -242,18 +257,17 @@ const gameController = (() => {
     let activePlayer = playerOne;
 
     // get current player
-    const getActivePlayer = () => activePlayer.getName();
-    //const getActivePlayerName = () => activePlayer.getName();
-    //const changePlayerName = (name) => activePlayer.setName(name);
+    const getActivePlayer = () => activePlayer;
 
     // Switch turns
     const switchTurn = () => {
-        return activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
+        activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
+        return activePlayer;
     }
 
         // Get player move
     const getMove = function(row, col) {
-        return board.markCell(row, col, getActivePlayer());
+        return board.markCell(row, col, activePlayer.getSymbol());
     }
 
     // read the state of the game board after every turn
@@ -261,43 +275,61 @@ const gameController = (() => {
     
     // check for winner or tie
     const checkWinner = () => {
-        let winner;
+        let winner = 3;
 
-        let currentBoard = readBoardState().flat();
+        const currentBoard = readBoardState().flat();
 
-        // Record the position of each player on the board
-        const playersPositions = currentBoard.reduce((accumulator, currentVal, index) => {
-            if (!accumulator[currentVal]) accumulator[currentVal] = [];
-            if(currentVal === 'X' || currentVal === 'O') {
-                accumulator[currentVal].push(index);
-            }
-            return accumulator;
-        }, {});
+        const positions = {
+            X: [],
+            O: [],
+        };
 
-        if(playersPositions['X'] && playersPositions['X'].length >= 3) {
-            if (wins.some(subArray => subArray.length === playersPositions['X'].length && subArray.every((value, index) => value === playersPositions['X'][index]))) {
-                winner = 1;
-                playerOne.increaseScore();
-            }
-        } else if(playersPositions['O'] && playersPositions['O'].length >= 3) {
-            if(wins.some(subArray => subArray.length === playersPositions['O'].length && subArray.every((value, index) => value === playersPositions['O'][index]))) {
-                winner = 2;
-                playerTwo.increaseScore();
-            } 
-        } else {
-            // check if empty cells 
-            let isDraw = currentBoard.every(item => item != "");
-            // if board is full then is a draw
-            if (isDraw) {
-                winner = 0;
-            } else {
-                winner = 3;
-                switchTurn();
-            }
+        currentBoard.forEach((cell, index) => {
+            if(cell === 'X') positions.X.push(index);
+            if(cell === 'O') positions.O.push(index);
+        });
+
+        if (wins.some(combo => combo.every(index => currentBoard[index] === 'X'))) {
+            winner = 1;
+            playerOne.increaseScore();
+        } else if (wins.some(combo => combo.every(index => currentBoard[index] === 'O'))) {
+            winner = 2;
+            playerTwo.increaseScore();
+        } else if (currentBoard.every(cell => cell !== '')) {
+            winner = 0;
+            increaseDraws();
         }
 
-        console.log(`Winner is ${winner}!`)
+        // Record the position of each player on the board
+        // const playersPositions = currentBoard.reduce((accumulator, currentVal, index) => {
+        //     if (!accumulator[currentVal]) accumulator[currentVal] = [];
+        //     if(currentVal === 'X' || currentVal === 'O') {
+        //         accumulator[currentVal].push(index);
+        //     }
+        //     return accumulator;
+        // }, {});
 
+        // if(playersPositions['X'] && playersPositions['X'].length >= 3) {
+        //     if (wins.some(subArray => subArray.length === playersPositions['X'].length && subArray.every((value, index) => value === playersPositions['X'][index]))) {
+        //         winner = 1;
+        //         playerOne.increaseScore();
+        //     }
+        // } else if(playersPositions['O'] && playersPositions['O'].length >= 3) {
+        //     if(wins.some(subArray => subArray.length === playersPositions['O'].length && subArray.every((value, index) => value === playersPositions['O'][index]))) {
+        //         winner = 2;
+        //         playerTwo.increaseScore();
+        //     } 
+        // } else {
+        //     // check if empty cells 
+        //     let isDraw = currentBoard.every(item => item != "");
+        //     // if board is full then is a draw
+        //     if (isDraw) {
+        //         winner = 0;
+        //     } else {
+        //         winner = 3;
+        //     }
+        // }
+        //console.log(`Winner is ${winner}!`)
         // 1 = X
         // 2 = O
         // 0 = draw
@@ -310,8 +342,17 @@ const gameController = (() => {
        const isMoveValid = getMove(row, col);
 
        if (!isMoveValid) return;
-       
-       return checkWinner();
+
+       const result = checkWinner();
+
+       if (result === 3) {
+        switchTurn();
+       } else if (result === 0 || result === 1 || result === 2) {
+        board.cleanBoard();
+        activePlayer = playerOne;
+       }
+
+       return result;
     }
 
     return {
@@ -321,57 +362,119 @@ const gameController = (() => {
         playerTwo,
         readBoardState,
         getBoard: board.getBoard,
+        getRounds,
+        increaseRounds,
+        getDraws,
+        increaseDraws,
+        cleanBoard: board.cleanBoard,
         }
 })();
-
-
-// console.log('the current player is:', gameController.getActivePlayer());
-// gameController.switchTurn();
-// gameController.getMove(0, 0);
-// gameController.getMove(1, 1);
-// gameController.getMove(2, 2);
-// console.log('The current matrix looks like this: ', gameController.readBoardState());
-// console.log(gameController.checkWinner());
-
 
 // TODO: Create a DisplayController object 
 // control the display of the game and DOM logic to render the content of the game board and player information
 function displayController() {
     const game = gameController;
     const boardContainer = document.querySelector('.board');
-    const turnShow = document.querySelector('.turn');
+    const turnShow = document.querySelector('.turn > span');
+    const xScore = document.querySelector('.x_score');
+    const oScore = document.querySelector('.o_score');
+    const playerX = document.querySelector('.player_x_name');
+    const playerO = document.querySelector('.player_o_name');
+    const drawScore = document.querySelector('.draw_score');
+
+    // SVG symbols
+    const xSymbol = document.createElement('img');
+    xSymbol.setAttribute('src', './assets/x.svg');
+
+    const oSymbol = document.createElement('img');
+    oSymbol.setAttribute('src', './assets/circle.svg');
+
+    game.playerOne.setName('John');
+    game.playerTwo.setName('Albert');
+
+    playerX.textContent = `${game.playerOne.getName()}`;
+    playerO.textContent = `${game.playerTwo.getName()}`;
 
     // TODO: Create an UpdateScreen method
-    const updateScreen = () => {
+    function updateScreen()  {
         // Clear the current board
         boardContainer.textContent = "";
+        turnShow.textContent = "";
+
         // Get the up-to-date board
         const board = game.getBoard();
-        // Get the active player's name
-        game.playerOne.setName('John')
-        const activePlayerName = game.playerOne.getName();
-        // Render player's turn in a div
-        turnShow.textContent = `It's ${activePlayerName}'s turn.`
-        // Render each grid square on the DOM
-        board.forEach((cell, index) => {
-            const cellButton = document.createElement('button');
-            cellButton.classList.add('cell');
-            cellButton.dataset.column = index;
-            cellButton.textContent = cell;
 
-            boardContainer.appendChild(cellButton);
+        // current player
+        const currentPlayer = game.getActivePlayer();
+
+        // update scores
+        xScore.textContent = `${game.playerOne.getScore()}`;
+        oScore.textContent = `${game.playerTwo.getScore()}`;
+        drawScore.textContent = `${game.getDraws()}`;
+
+        //console.log(`the current player is ${currentPlayer.getName()}`);
+        // Render player's turn in a div
+        turnShow.appendChild(currentPlayer === game.playerOne ? xSymbol : oSymbol);
+
+        // Render scores
+        xScore.textContent = `${game.playerOne.getScore()}`;
+        oScore.textContent = `${game.playerTwo.getScore()}`;
+
+        // Render each grid square on the DOM
+        board.forEach((row, rowIndex) => {
+            row.forEach((column, columnIndex) => {
+
+                const cellButton = document.createElement('button');
+                cellButton.classList.add('cell');
+                cellButton.dataset.row = rowIndex;
+                cellButton.dataset.column = columnIndex;
+                //cellButton.textContent = column;
+                if (column === 'X') {
+                    const xIcon = xSymbol.cloneNode(true);
+                    cellButton.appendChild(xIcon);
+                } else if ( column === 'O') {
+                    const oIcon = oSymbol.cloneNode(true);
+                    cellButton.appendChild(oIcon);
+                }
+
+                boardContainer.appendChild(cellButton);
+
+            });
         });
 
     }
-       
+
 
     // TODO: Create a clickHandlerBoard method
-        // verifies that a valid cell is clicked 
-        // gets the column data attribute value
-        // pass data to playround
-        // run updated screen method to refresh DOM
+    function clickHandlerBoard(e) {
+        console.log('column index:', e.target.dataset.column)
+        console.log('row index:', e.target.dataset.row)
 
-    updateScreen()
+        // gets the data attribute value
+        const clickedButton = e.target;
+
+         // pass data to playround
+        const result = game.playRound(clickedButton.dataset.row, clickedButton.dataset.column);
+
+        if(result === 1) {
+            console.log('Player One wins!!')
+            game.increaseRounds();
+        } else if (result === 2) {
+            console.log('Player Two wins!!')
+            game.increaseRounds();
+        } else if (result === 0) {
+            console.log('It is a draw!!')
+            game.increaseRounds();
+        }
+
+        // run updated screen method to refresh DOM
+        updateScreen();
+    }
+
+    boardContainer.addEventListener('click', clickHandlerBoard);
+        
+
+    updateScreen();
 }
 
 displayController();
